@@ -1,0 +1,13 @@
+name = "AnovaFixedEffectModels"
+uuid = "1679e1b4-77d2-40d8-9203-df0304d70f88"
+authors = ["yufongpeng <54415349+yufongpeng@users.noreply.github.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
