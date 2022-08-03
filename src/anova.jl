@@ -1,6 +1,6 @@
 # ================================================================================================
 # Main API
-"""
+@doc """
     anova(<models>...; test::Type{<: GoodnessOfFit})
     anova(test::Type{<: GoodnessOfFit}, <models>...;  <keyword arguments>)
 
@@ -23,6 +23,8 @@ Other keyword arguments:
 
 For fitting new models and conducting anova at the same time, see [`anova_lfe`](@ref) for `FixedEffectModel`.
 """
+anova(::Val{:AnovaFixedEffectModels})
+
 anova(trms::Vararg{TableRegressionModel{<: FixedEffectModel}}; 
         test::Type{<: GoodnessOfFit} = FTest,
         kwargs...) = 
