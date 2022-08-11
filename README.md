@@ -10,5 +10,5 @@
 [docs-stable-url]: https://yufongpeng.github.io/AnovaBase.jl/stable/FixedEffectModels
 [ci-img]: https://github.com/yufongpeng/AnovaFixedEffectModels.jl/workflows/CI/badge.svg
 [ci-url]: https://github.com/yufongpeng/AnovaFixedEffectModels.jl/actions?query=workflow%3ACI
-[codecov-img]: https://codecov.io/gh/yufongpeng/AnovaFixedEffectModels.jl/coveage.svg
+[codecov-img]: https://codecov.io/gh/yufongpeng/AnovaFixedEffectModels.jl/branch/main/graph/badge.svg?token=3xv5ElhLkS
 [codecov-url]: https://codecov.io/gh/yufongpeng/AnovaFixedEffectModels.jl
