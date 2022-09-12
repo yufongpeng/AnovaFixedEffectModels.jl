@@ -6,41 +6,43 @@
 
 Analysis of variance.
 
-Return `AnovaResult{M, test, N}`.
+Return `AnovaResult{M, test, N}`. See [`AnovaResult`](@ref) for details.
 
+# Arguments
 * `models`: model objects
     1. `TableRegressionModel{<: FixedEffectModel}` fitted by `AnovaFixedEffectModels.lfe`.
-    If mutiple models are provided, they should be nested and the last one is the most saturated.
+    If mutiple models are provided, they should be nested and the last one is the most complex.
 * `test`: test statistics for goodness of fit. The default is based on the model type.
     1. `TableRegressionModel{<: FixedEffectModel}`: `FTest`.
 
-Other keyword arguments:
+## Other keyword arguments
 * When one model is provided:  
     1. `type` specifies type of anova (1 or 3). Default value is 1.
 * When multiple models are provided:  
     1. `check`: allows to check if models are nested. Defalut value is true. Some checkers are not implemented now.
     2. `isnested`: true when models are checked as nested (manually or automatically). Defalut value is false. 
 
-Algorithm:
+# Algorithm
 
-For the ith model, devᵢ is defined as the sum of [squared deviance residuals (unit deviance)](https://en.wikipedia.org/wiki/Deviance_(statistics)). 
+The variable `dev` is a vector that the ith element is the sum of [squared deviance residuals (unit deviance)](https://en.wikipedia.org/wiki/Deviance_(statistics)) of the ith model. 
 It is equivalent to the residual sum.
 
-The attribute `deviance` is Δdevᵢ = devᵢ₋₁ - devᵢ.
+The attribute `deviance` of `AnovaResult` is a vector `Δdev` where `Δdevᵢ = devᵢ₋₁ - devᵢ`.
 
-F-statistic is then defined as Δdevᵢ/(squared dispersion × degree of freedom).
+F-statistic is then defined as `Δdev / (dispersion² × degree of freedom)`.
 
-For type I and III ANOVA, F-statistic is computed directly by the variance-covariance matrix(vcov) of the saturated model; the deviance is calculated backward.
+For type I and III ANOVA, F-statistic is computed directly by the variance-covariance matrix (`vcov`) of the most complex model; the deviance is calculated backward.
 1. Type I:
 
-    First, calculate f as the upper factor of Cholesky factorization of vcov⁻¹ * β.
+    First, calculate `f` as the upper factor of Cholesky factorization of `vcov⁻¹ * β`.
 
-    For a factor that starts at ith row/column of vcov with n degree of freedom, the f-statistic is Σᵢⁱ⁺ⁿ⁻¹ fₖ²/n.
+    For a factor that starts from ith row/column of the model matrix with `n` degree of freedom, the f-statistic is `Σᵢⁱ⁺ⁿ⁻¹ fₖ² / n`.
 2. Type III: 
 
-    For a factor occupying ith to jth row/column of vcov with n degree of freedom, f-statistic is (β[i:j]' * vcov[i:j, i:j]⁻¹ * β[i:j])/n.
+    For a factor occupying ith to jth row/column of the model matrix with `n` degree of freedom, f-statistic is `β[i, ..., j]ᵀ * vcov[i, ..., j; i, ..., j]⁻¹ * β[i, ..., j] / n`.
 
-For fitting new models and conducting anova at the same time, see [`anova_lfe`](@ref) for `FixedEffectModel`.
+!!! note
+    For fitting new models and conducting anova at the same time, see [`anova_lfe`](@ref) for `FixedEffectModel`.
 """
 anova(::Val{:AnovaFixedEffectModels})
 
