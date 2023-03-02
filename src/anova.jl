@@ -14,7 +14,7 @@ Return `AnovaResult{M, test, N}`. See [`AnovaResult`](@ref) for details.
     If mutiple models are provided, they should be nested and the last one is the most complex.
 * `test`: test statistics for goodness of fit. Only `FTest` is available now.
 
-## Other keyword arguments
+# Other keyword arguments
 * When one model is provided:  
     1. `type` specifies type of anova. Default value is 1.
 * When multiple models are provided:  
@@ -40,7 +40,8 @@ function anova(::Type{FTest},
             aovm::FullModel{M}) where {M <: FixedEffectModel}
 
     assign = asgn(predictors(aovm))
-    fullasgn = asgn(predictors(aovm.model))
+    fullpred = predictors(aovm.model)
+    fullasgn = asgn(fullpred)
     df = filter(>(0), dof_asgn(assign))
     # May exist some floating point error from dof_residual
     varβ = vcov(aovm.model)
@@ -53,7 +54,7 @@ function anova(::Type{FTest},
         end
     elseif aovm.type == 2
         fstat = ntuple(last(fullasgn) - offset) do fix
-            select1 = sort!(collect(select_super_interaction(f.rhs, fix + offset)))
+            select1 = sort!(collect(select_super_interaction(fullpred, fix + offset)))
             select2 = setdiff(select1, fix + offset)
             select1 = findall(in(select1), fullasgn)
             select2 = findall(in(select2), fullasgn)
