@@ -1,14 +1,8 @@
 # ==========================================================================================================
 # Backend funcion
-
-fe_intercept(f::FormulaTerm) = fe_intercept(f.rhs)
-fe_intercept(term::StatsModels.TupleTerm) = map(fe_intercept, term)
-fe_intercept(term::FunctionTerm) = first(term.exorig.args) == :fe 
-fe_intercept(term) = false
-
-width_fe(term::FunctionTerm) = first(term.exorig.args) == :fe ? 0 : 1
-width_fe(ts::InteractionTerm) = prod(width_fe(t) for t in ts.terms)
-width_fe(term) = width(term)
+formula(model::T) where {T <: FixedEffectModel} = model.formula
+predictors(model::T) where {T <: FixedEffectModel} = model.formula_schema.rhs.terms
 
 # Variable dispersion
-dof(trm::TableRegressionModel{<: FixedEffectModel}) = trm.model.nobs - trm.model.dof_residual + 1
+dof_pred(model::FixedEffectModel) = nobs(model) - dof_residual(model)
+# define dof on NestedModels?

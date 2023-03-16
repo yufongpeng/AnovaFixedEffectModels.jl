@@ -6,10 +6,12 @@ using Statistics, StatsBase, LinearAlgebra, Distributions, Reexport, Printf
 import StatsBase: fit!, fit
 import StatsModels: TableRegressionModel, vectorize, width, apply_schema, 
                     ModelFrame, ModelMatrix, columntable, asgn
-import AnovaBase: ftest_nested, formula, anova, nestedmodels, _diff, _diffn, dof, dof_residual, deviance, nobs, coefnames
+
+using AnovaBase: select_super_interaction, extract_contrasts, canonicalgoodnessoffit, subformula, dof_asgn, lrt_nested, ftest_nested, _diff, _diffn
+import AnovaBase: anova, nestedmodels, anovatable, prednames, predictors, formula
 using Tables: columntable
 
-export anova_lfe, lfe, to_trm
+export anova_lfe, lfe
 
 include("anova.jl")
 include("fit.jl")
