@@ -2,7 +2,9 @@
 # Main API
 """
     anova(<lfemodels>...; test::Type{<: GoodnessOfFit})
+    anova(<anovamodel>; test::Type{<: GoodnessOfFit})
     anova(test::Type{<: GoodnessOfFit}, <lfemodels>...;  <keyword arguments>)
+    anova(test::Type{<: GoodnessOfFit}, <anovamodel>;  <keyword arguments>)
 
 Analysis of variance.
 
@@ -10,8 +12,9 @@ Return `AnovaResult{M, test, N}`. See [`AnovaResult`](@ref) for details.
 
 # Arguments
 * `lfemodels`: model objects
-    1. `FixedEffectModel` fitted by `AnovaFixedEffectModels.lfe` or `FixedEffectModels.reg`.
+    * `FixedEffectModel` fitted by `AnovaFixedEffectModels.lfe` or `FixedEffectModels.reg`.
     If mutiple models are provided, they should be nested and the last one is the most complex.
+* `anovamodel`: wrapped model objects; `FullModel` and `NestedModels`.
 * `test`: test statistics for goodness of fit. Only `FTest` is available now.
 
 # Other keyword arguments
@@ -30,6 +33,15 @@ anova(models::Vararg{M};
         kwargs...) where {M <: FixedEffectModel} = 
     anova(test, models...; kwargs...)
 
+anova(aovm::NestedModels{M}; 
+        test::Type{<: GoodnessOfFit} = FTest,
+        kwargs...) where {M <: FixedEffectModel} = 
+    anova(test, aovm; kwargs...)
+
+anova(aovm::FullModel{M}; 
+        test::Type{<: GoodnessOfFit} = FTest,
+        kwargs...) where {M <: FixedEffectModel} = 
+    anova(test, aovm; kwargs...)    
 # ================================================================================================
 # ANOVA by F test
 anova(::Type{FTest}, 
