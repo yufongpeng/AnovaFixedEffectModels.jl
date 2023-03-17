@@ -105,9 +105,14 @@ function anova(::Type{FTest},
     ftest_nested(NestedModels{M}(models), df, dfr, dev, last(dev) / last(dfr))
 end
 
-anova(::Type{FTest}, aovm::NestedModels{M}) where {M <: FixedEffectModel} = 
-    lrt_nested(aovm, dof_pred.(aovm.model), rss.(aovm.model), 1)
+function anova(::Type{FTest}, aovm::NestedModels{M}) where {M <: FixedEffectModel}
+    dfr = round.(Int, dof_residual.(aovm.model))
+    dev = rss.(aovm.model)
+    ftest_nested(aovm, dof_pred.(aovm.model), dfr, dev, last(dev) / last(dfr))
+end
 
+anova(::Type{LRT}, aovm::NestedModels{M}) where {M <: FixedEffectModel} = 
+    lrt_nested(aovm, dof_pred.(aovm.model), rss.(aovm.model), 1)
 """
     lfe(formula::FormulaTerm, df, vcov::CovarianceEstimator = Vcov.simple(); kwargs...)
 
