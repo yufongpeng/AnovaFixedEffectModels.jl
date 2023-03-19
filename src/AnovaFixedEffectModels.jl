@@ -7,7 +7,7 @@ import StatsBase: fit!, fit
 import StatsModels: TableRegressionModel, vectorize, width, apply_schema, 
                     ModelFrame, ModelMatrix, columntable, asgn
 
-using AnovaBase: select_super_interaction, extract_contrasts, canonicalgoodnessoffit, subformula, dof_asgn, lrt_nested, ftest_nested, _diff, _diffn
+using AnovaBase: select_super_interaction, extract_contrasts, canonicalgoodnessoffit, subformula, dof_asgn, lrt_nested, ftest_nested, _diff, _diffn, has_intercept
 import AnovaBase: anova, nestedmodels, anovatable, prednames, predictors, formula
 using Tables: columntable
 

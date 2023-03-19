@@ -54,7 +54,7 @@ function anova(::Type{FTest},
     assign = asgn(predictors(aovm))
     fullpred = predictors(aovm.model)
     fullasgn = asgn(fullpred)
-    df = filter(>(0), dof_asgn(assign))
+    df = tuple(filter(>(0), dof_asgn(assign))...)
     # May exist some floating point error from dof_residual
     varβ = vcov(aovm.model)
     β = aovm.model.coef
