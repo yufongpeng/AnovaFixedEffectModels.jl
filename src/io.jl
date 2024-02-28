@@ -39,3 +39,58 @@ function anovatable(aov::AnovaResult{<: NestedModels{<: FixedEffectModel, N}, FT
                 ["DOF", "ΔDOF", "Res.DOF", "R²", "ΔR²", "R²_within", "ΔR²_within", "Res.SS", "Exp.SS", "F value", "Pr(>|F|)"],
                 rownames, 11, 10)
 end 
+
+function show(io::IO, anovamodel::FullModel{<: T}) where {T <: FixedEffectModel}
+    println(io, "FullModel for type $(anovamodel.type) test")
+    println(io)
+    println(io, "Predictors:")
+    println(io, join(prednames(anovamodel), ", "))
+    println(io)
+    println(io, "Formula:")
+    println(io, anovamodel.model.formula)
+    println(io)
+    println(io, "Coefficients:")
+    show(io, coeftable(anovamodel.model))
+end
+
+function show(io::IO, anovamodel::NestedModels{M, N}) where {M <: FixedEffectModel, N}
+    println(io, "NestedModels with $N models")
+    println(io)
+    println(io, "Formulas:")
+    for(id, m) in enumerate(anovamodel.model)
+        println(io, "Model $id: ", m.formula)
+    end
+    println(io)
+    println(io, "Coefficients:")
+    show(io, coeftable(first(anovamodel.model)))
+    println(io)
+    N > 2 && print(io, " .\n" ^ 3)
+    show(io, coeftable(last(anovamodel.model)))
+end
+
+# Show function that delegates to anovatable
+function show(io::IO, aov::AnovaResult{<: FullModel{<: FixedEffectModel}, T}) where {T <: GoodnessOfFit}
+    at = anovatable(aov)
+    println(io, "Analysis of Variance")
+    println(io)
+    println(io, "Type $(anova_type(aov)) test / $(testname(T))")
+    println(io)
+    println(io, aov.anovamodel.model.formula)
+    println(io)
+    println(io, "Table:")
+    show(io, at)
+end
+
+function show(io::IO, aov::AnovaResult{<: MultiAovModels{<: FixedEffectModel}, T}) where {T <: GoodnessOfFit}
+    at = anovatable(aov)
+    println(io,"Analysis of Variance")
+    println(io)
+    println(io, "Type $(anova_type(aov)) test / $(testname(T))")
+    println(io)
+    for(id, m) in enumerate(aov.anovamodel.model)
+        println(io, "Model $id: ", m.formula)
+    end
+    println(io)
+    println(io, "Table:")
+    show(io, at)
+end

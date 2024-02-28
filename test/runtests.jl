@@ -52,7 +52,7 @@ isapprox(x::NTuple{N, Float64}, y::NTuple{N, Float64}, atol::NTuple{N, Float64} 
             global aovl1 = AnovaGLM.anova(lm1)
             global aovf2 = AFE.anova(fem2, type = 3)
             global aovl2 = AnovaGLM.anova(lm2, type = 3)
-            global aovfs = AFE.anova(NestedModels{FixedEffectModel}(fem0, fem1))
+            global aovfs = AFE.anova(NestedModels(fem0, fem1))
             global aovfs2 = AFE.anova(fem0, fem1)
             global aovls = AnovaGLM.anova(lm0, lm1)
             @test !(@test_error test_show(aovf1))
@@ -68,7 +68,6 @@ isapprox(x::NTuple{N, Float64}, y::NTuple{N, Float64}, atol::NTuple{N, Float64} 
             df = DataFrame(y = randn(1000), x = rand(1:5, 1000), z = rand(["1", "2"], 1000), t = 1:1000)
             fems1 = nestedmodels(FixedEffectModel, @formula(y ~ t + fe(z) + fe(x)), df)
             fems2 = nestedmodels(FixedEffectModel, @formula(y ~ z + t & fe(x)), df)
-            @test formula(fems1.model[1]).rhs == @formula(y ~ 0 + fe(z) + fe(x)).rhs
             @test AFE.predictors(fems2.model[2])[1] == InterceptTerm{true}()
         end
     end

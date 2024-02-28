@@ -66,10 +66,10 @@ function anova(::Type{FTest},
         end
     elseif aovm.type == 2
         fstat = ntuple(last(fullasgn) - offset) do fix
-            select1 = sort!(collect(select_super_interaction(fullpred, fix + offset)))
-            select2 = setdiff(select1, fix + offset)
-            select1 = findall(in(select1), fullasgn)
-            select2 = findall(in(select2), fullasgn)
+            s1 = sort!(collect(select_super_interaction(fullpred, fix + offset)))
+            s2 = setdiff(s1, fix + offset)
+            select1 = findall(in(s1), fullasgn)
+            select2 = findall(in(s2), fullasgn)
             (β[select1]' * (varβ[select1, select1] \ β[select1]) - β[select2]' * (varβ[select2, select2] \ β[select2])) / df[fix]
         end
     else
@@ -83,7 +83,7 @@ function anova(::Type{FTest},
     σ² = rss(aovm.model) / dfr
     devs = @. fstat * σ² * df
     pvalue = @. ccdf(FDist(df, dfr), abs(fstat))
-    AnovaResult{FTest}(aovm, df, devs, fstat, pvalue, NamedTuple())
+    AnovaResult(aovm, FTest, df, devs, fstat, pvalue, NamedTuple())
 end
 
 # =================================================================================================================
@@ -102,7 +102,7 @@ function anova(::Type{FTest},
     dev = rss.(models)
     # check comparable and nested
     check && @warn "Could not check whether models are nested: results may not be meaningful"
-    ftest_nested(NestedModels{M}(models), df, dfr, dev, last(dev) / last(dfr))
+    ftest_nested(NestedModels(models), df, dfr, dev, last(dev) / last(dfr))
 end
 
 function anova(::Type{FTest}, aovm::NestedModels{M}) where {M <: FixedEffectModel}
