@@ -1,6 +1,5 @@
 # ==========================================================================================================
 # Backend funcion
-formula(model::T) where {T <: FixedEffectModel} = model.formula
 predictors(model::T) where {T <: FixedEffectModel} = model.formula_schema.rhs.terms
 
 # Variable dispersion
@@ -19,10 +18,10 @@ Generate nested models from modeltype, formula and data. The null model will be 
 function nestedmodels(modeltype::Type{FixedEffectModel}, f::FormulaTerm, data; null = true, kwargs...)
     fullm = lfe(f, data; kwargs...)
     predterms = predictors(fullm)
-    has_intercept(predterms) || (length(predterms) > 1 ? (predterms = predterms[2:end]) : throw(ArgumentError("Empty model is given!")))
+    hasintercept(predterms) || (length(predterms) > 1 ? (predterms = predterms[2:end]) : throw(ArgumentError("Empty model is given!")))
     feterms = filter(isfe, f.rhs)
     subm = ntuple(length(predterms) - 1) do i
         lfe(FormulaTerm(f.lhs, (predterms[1:i]..., feterms...)), data; kwargs...)
     end
-    NestedModels{FixedEffectModel}(null ? (lfe(FormulaTerm(f.lhs, (ConstantTerm(0), feterms...)), data; kwargs...), subm..., fullm) : (subm..., fullm))
+    NestedModels(null ? (lfe(FormulaTerm(f.lhs, (ConstantTerm(0), feterms...)), data; kwargs...), subm..., fullm) : (subm..., fullm))
 end
