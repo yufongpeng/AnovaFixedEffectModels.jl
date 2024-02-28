@@ -56,8 +56,10 @@ isapprox(x::NTuple{N, Float64}, y::NTuple{N, Float64}, atol::NTuple{N, Float64} 
             global aovfs2 = AFE.anova(fem0, fem1)
             global aovls = AnovaGLM.anova(lm0, lm1)
             @test !(@test_error test_show(aovf1))
+            @test !(@test_error test_show(aovf1.anovamodel))
             @test !(@test_error test_show(aovf2))
             @test !(@test_error test_show(aovfs))
+            @test !(@test_error test_show(aovfs.anovamodel))
             @test nobs(aovf1) == nobs(aovl1)
             @test last(dof(aovf1)) == dof(aovl1)[end - 1]
             @test isapprox(first(deviance(aovf2)), first(deviance(aovl2)))
