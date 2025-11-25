@@ -1,10 +1,10 @@
 # ================================================================================================
 # Main API
 """
-    anova(<lfemodels>...; test::Type{<: GoodnessOfFit})
-    anova(<anovamodel>; test::Type{<: GoodnessOfFit})
-    anova(test::Type{<: GoodnessOfFit}, <lfemodels>...;  <keyword arguments>)
-    anova(test::Type{<: GoodnessOfFit}, <anovamodel>;  <keyword arguments>)
+    anova(lfemodels...; test::Type{<: GoodnessOfFit})
+    anova(anovamodel; test::Type{<: GoodnessOfFit})
+    anova(test::Type{<: GoodnessOfFit}, lfemodels...; keyword_arguments...)
+    anova(test::Type{<: GoodnessOfFit}, anovamodel; keyword_arguments...)
 
 Analysis of variance.
 
@@ -125,8 +125,8 @@ lfe(formula::FormulaTerm, df, vcov::CovarianceEstimator = Vcov.simple(); kwargs.
 # Fit new models
 """
     anova_lfe(f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple(); 
-            test::Type{<: GoodnessOfFit} = FTest, <keyword arguments>)
-    anova_lfe(test::Type{<: GoodnessOfFit}, f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple(); <keyword arguments>)
+            test::Type{<: GoodnessOfFit} = FTest, keyword_arguments...)
+    anova_lfe(test::Type{<: GoodnessOfFit}, f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple(); keyword_arguments...)
 
 ANOVA for fixed-effect linear regression.
 * `vcov`: estimator of covariance matrix.

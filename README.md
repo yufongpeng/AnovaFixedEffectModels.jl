@@ -12,3 +12,5 @@
 [ci-url]: https://github.com/yufongpeng/AnovaFixedEffectModels.jl/actions?query=workflow%3ACI
 [codecov-img]: https://codecov.io/gh/yufongpeng/AnovaFixedEffectModels.jl/branch/main/graph/badge.svg?token=3xv5ElhLkS
 [codecov-url]: https://codecov.io/gh/yufongpeng/AnovaFixedEffectModels.jl
+
+*AnovaFixedEffectModels.jl* is a Julia package providing one-way and multi-way anova in Julia with models from `FixedEffectModels.jl`.
