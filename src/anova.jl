@@ -147,16 +147,13 @@ function anova(::Type{LRT},
     ord = sortperm(collect(df))
     df = df[ord]
     models = models[ord]
-    dev = rss.(models)
+    dev = @. -2 * loglikelihood(models)
     # check comparable and nested
     check && @warn "Could not check whether models are nested: results may not be meaningful"
-    lrt_nested(NestedModels(models), df, dev, last(dev) / dof_aovres(last(models)))
+    lrt_nested(NestedModels(models), df, dev, 1)
 end
-function anova(::Type{LRT}, aovm::NestedModels{M}) where {M <: FixedEffectModel}
-    df = dof_aov.(aovm.model)
-    dev = deviance.(aovm.model)
-    lrt_nested(aovm, df, dev, last(dev) / dof_aovres(last(aovm.model)))
-end
+anova(::Type{LRT}, aovm::NestedModels{M}) where {M <: FixedEffectModel} = 
+    lrt_nested(aovm, dof_aov.(aovm.model), @.(-2loglikelihood(aovm.model)), 1)
 
 function anova(
                 ::Type{LRT}, 
@@ -170,15 +167,12 @@ function anova(
     ord = sortperm(df)
     df = (dof_aov(m0), df[ord]...)
     models = (m0, m[ord]...)
-    dev = deviance.(models)
+    dev = @. -2 * loglikelihood(models)
     check && @warn "Could not check whether models are nested: results may not be meaningful"
-    lrt_nested(MixedAovModels{Union{M, T}, length(models)}(models), df, dev, last(dev) / dof_aovres(last(models)))
+    lrt_nested(MixedAovModels{Union{M, T}, length(models)}(models), df, dev, 1)
 end
-function anova(::Type{LRT}, aovm::MixedAovModels{M}) where {M <:  Union{LM_MODEL, FixedEffectModel}}
-    df = dof_aov.(aovm.model)
-    dev = deviance.(aovm.model)
-    lrt_nested(aovm, df, dev, last(dev) / dof_aovres(last(aovm.model)))
-end
+anova(::Type{LRT}, aovm::MixedAovModels{M}) where {M <:  Union{LM_MODEL, FixedEffectModel}} = 
+    lrt_nested(aovm, dof_aov.(aovm.model), @.(-2loglikelihood(aovm.model)), 1)
 
 """
     lfe(formula::FormulaTerm, df, vcov::CovarianceEstimator = Vcov.simple(); kwargs...)
