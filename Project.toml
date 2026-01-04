@@ -1,6 +1,6 @@
 name = "AnovaFixedEffectModels"
 uuid = "e4965305-65d6-464d-9c03-ae3e5cffadab"
-version = "0.2.7"
+version = "0.2.8"
 authors = ["yufongpeng <54415349+yufongpeng@users.noreply.github.com> and contributors"]
 
 [deps]
