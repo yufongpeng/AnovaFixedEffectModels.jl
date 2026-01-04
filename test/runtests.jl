@@ -25,7 +25,7 @@ transform!(gpa,
            5 => x->replace(x, "male" => 1, "female" => 0),                                                            
            4 => x->replace(x, "1 hour" => 1, "2 hours" => 2, "3 hours" => 3),                                                            
            renamecols = false)
-transform!(gpa, [1, 2, 5, 7] .=> categorical, renamecols = false)
+transform!(gpa, [1, 2, 5, 7] .=> categorical, 4 => ByRow(Int), renamecols = false)
 # custimized approx
 isapprox(x::NTuple{N, Float64}, y::NTuple{N, Float64}, atol::NTuple{N, Float64} = x ./ 1000) where N = 
     all(map((a, b, c)->isapprox(a, b, atol = c > eps(Float64) ? c : eps(Float64)), x, y, atol))
@@ -35,11 +35,20 @@ isapprox(x::NTuple{N, Float64}, y::NTuple{N, Float64}, atol::NTuple{N, Float64} 
         @testset "One high dimensional fe on intercept" begin
             global aovf = anova_lfe(@formula(gpa ~ fe(student) + occasion + job), gpa)
             global aovl = anova_lm(@formula(gpa ~ student + occasion + job), gpa)
+            global aovflrt = anova_lfe(LRT, @formula(gpa ~ fe(student) + occasion + job), gpa)
+            global aovllrt = anova_lm(LRT, @formula(gpa ~ student + occasion + job), gpa)
+            global aovlf = anova(lm(@formula(gpa ~ occasion + job), gpa), aovf.anovamodel.model)
+            global aovff = anova(lfe(@formula(gpa ~ occasion + job), gpa), aovf.anovamodel.model)
+            global aovlflrt = anova(LRT, lm(@formula(gpa ~ occasion + job), gpa), aovf.anovamodel.model)
+            global aovfflrt = anova(LRT, lfe(@formula(gpa ~ occasion + job), gpa), aovf.anovamodel.model)
             @test !(@test_error test_show(aovf))
             @test nobs(aovf) == nobs(aovl)
             @test dof(aovf) == dof(aovl)[3:end]
             @test isapprox(deviance(aovf), deviance(aovl)[3:end])
             @test isapprox(pval(aovf)[1:end - 1], pval(aovl)[3:end - 1])
+            @test isapprox(last(teststat(aovllrt)), last(teststat(aovflrt)))
+            @test isapprox(deviance(aovlf), deviance(aovff))
+            @test isapprox(last(teststat(aovlflrt)), last(teststat(aovfflrt)))
         end
         @testset "High dimensional fe on slope and intercept" begin
             fem0 = lfe(@formula(gpa ~ fe(student) & occasion), gpa)
@@ -53,8 +62,12 @@ isapprox(x::NTuple{N, Float64}, y::NTuple{N, Float64}, atol::NTuple{N, Float64} 
             global aovf2 = AFE.anova(fem2, type = 3)
             global aovl2 = AnovaGLM.anova(lm2, type = 3)
             global aovfs = AFE.anova(NestedModels(fem0, fem1))
+            global aovfslrt = AFE.anova(LRT, NestedModels(fem0, fem1))
             global aovfs2 = AFE.anova(fem0, fem1)
+            global aovfslrt2 = AFE.anova(LRT, fem0, fem1)
             global aovls = AnovaGLM.anova(lm0, lm1)
+            global aovlfs = AFE.anova(MixedAovModels(lm(@formula(gpa ~ 1), gpa), fem0))
+            global aovlfslrt = AFE.anova(LRT, MixedAovModels(lm(@formula(gpa ~ 1), gpa), fem0))
             @test !(@test_error test_show(aovf1))
             @test !(@test_error test_show(aovf1.anovamodel))
             @test !(@test_error test_show(aovf2))
@@ -65,12 +78,15 @@ isapprox(x::NTuple{N, Float64}, y::NTuple{N, Float64}, atol::NTuple{N, Float64} 
             @test isapprox(first(deviance(aovf2)), first(deviance(aovl2)))
             @test isapprox(first(teststat(aovf2)), first(teststat(aovl2)))
             @test isapprox(teststat(aovfs)[2], teststat(aovfs2)[2])
+            @test isapprox(teststat(aovfslrt)[2], teststat(aovfslrt2)[2])
+            @test isapprox(deviance(aovlfs), deviance(aovlfslrt))
         end
         @testset "nestedmodels" begin
             df = DataFrame(y = randn(1000), x = rand(1:5, 1000), z = rand(["1", "2"], 1000), t = 1:1000)
             fems1 = nestedmodels(FixedEffectModel, @formula(y ~ t + fe(z) + fe(x)), df)
             fems2 = nestedmodels(FixedEffectModel, @formula(y ~ z + t & fe(x)), df)
             @test AFE.predictors(fems2.model[2])[1] == InterceptTerm{true}()
+            @test AFE.predictors(fems1.model[1])[1] == InterceptTerm{false}()
         end
     end
 end

@@ -1,17 +1,21 @@
 module AnovaFixedEffectModels
 
 
-using Statistics, StatsBase, LinearAlgebra, Distributions, Reexport, Printf
+using Statistics, StatsBase, LinearAlgebra, Distributions, Reexport, Printf, GLM
 @reexport using FixedEffectModels, AnovaBase
 import StatsBase: fit!, fit
-import StatsModels: TableRegressionModel, vectorize, width, apply_schema, 
-                    ModelFrame, ModelMatrix, columntable, asgn
-
-using AnovaBase: select_super_interaction, extract_contrasts, canonicalgoodnessoffit, subformula, dof_asgn, lrt_nested, ftest_nested, _diff, _diffn, testname
-import AnovaBase: anova, nestedmodels, anovatable, prednames, predictors, formula
+using StatsModels: 
+    TableRegressionModel, vectorize, width, apply_schema, 
+    ModelFrame, ModelMatrix, columntable, asgn
+using AnovaBase: 
+    select_super_interaction, extract_contrasts, canonicalgoodnessoffit, 
+    subformula, dof_asgn, lrt_nested, ftest_nested, _diff, _diffn, testname
+import AnovaBase: anova, nestedmodels, anovatable, prednames, predictors, formula_aov, dof_aov, dof_aovres
 using Tables: columntable
 import Base: show
 export anova_lfe, lfe
+
+const LM_MODEL = Union{TableRegressionModel{<: LinearModel}, <: LinearModel}
 
 include("anova.jl")
 include("fit.jl")

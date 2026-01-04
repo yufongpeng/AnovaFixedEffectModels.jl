@@ -14,7 +14,7 @@ Return `AnovaResult{M, test, N}`. See [`AnovaResult`](@ref) for details.
 * `lfemodels`: model objects
     * `FixedEffectModel` fitted by `AnovaFixedEffectModels.lfe` or `FixedEffectModels.reg`.
     If mutiple models are provided, they should be nested and the last one is the most complex.
-* `anovamodel`: wrapped model objects; `FullModel` and `NestedModels`.
+* `anovamodel`: wrapped model objects; `FullModel`, `NestedModels`, and `MixedAovModels`.
 * `test`: test statistics for goodness of fit. Only `FTest` is available now.
 
 # Other keyword arguments
@@ -36,6 +36,11 @@ anova(models::Vararg{M};
 anova(aovm::NestedModels{M}; 
         test::Type{<: GoodnessOfFit} = FTest,
         kwargs...) where {M <: FixedEffectModel} = 
+    anova(test, aovm; kwargs...)
+
+anova(aovm::MixedAovModels{M}; 
+        test::Type{<: GoodnessOfFit} = FTest,
+        kwargs...) where {M <: Union{<: LM_MODEL, <: FixedEffectModel}} = 
     anova(test, aovm; kwargs...)
 
 anova(aovm::FullModel{M}; 
@@ -79,7 +84,7 @@ function anova(::Type{FTest},
             β[select]' * (varβ[select, select] \ β[select]) / df[fix]
         end
     end
-    dfr = round(Int, dof_residual(aovm.model))
+    dfr = round(Int, dof_aovres(aovm.model))
     σ² = rss(aovm.model) / dfr
     devs = @. fstat * σ² * df
     pvalue = @. ccdf(FDist(df, dfr), abs(fstat))
@@ -88,31 +93,93 @@ end
 
 # =================================================================================================================
 # Nested models 
-
 function anova(::Type{FTest}, 
                 models::Vararg{M}; 
                 check::Bool = true) where {M <: FixedEffectModel}
 
-    df = dof_pred.(models)
+    df = dof_aov.(models)
     ord = sortperm(collect(df))
     df = df[ord]
     models = models[ord]
     # May exist some floating point error from dof_residual
-    dfr = round.(Int, dof_residual.(models))
+    dfr = round.(Int, dof_aovres.(models))
     dev = rss.(models)
     # check comparable and nested
     check && @warn "Could not check whether models are nested: results may not be meaningful"
     ftest_nested(NestedModels(models), df, dfr, dev, last(dev) / last(dfr))
 end
-
 function anova(::Type{FTest}, aovm::NestedModels{M}) where {M <: FixedEffectModel}
-    dfr = round.(Int, dof_residual.(aovm.model))
+    dfr = round.(Int, dof_aovres.(aovm.model))
     dev = rss.(aovm.model)
-    ftest_nested(aovm, dof_pred.(aovm.model), dfr, dev, last(dev) / last(dfr))
+    ftest_nested(aovm, dof_aov.(aovm.model), dfr, dev, last(dev) / last(dfr))
 end
 
-anova(::Type{LRT}, aovm::NestedModels{M}) where {M <: FixedEffectModel} = 
-    lrt_nested(aovm, dof_pred.(aovm.model), rss.(aovm.model), 1)
+anova(m0::M, m1::T, ms::Vararg{T}; type::Int = 1, kwargs...) where {M <: LM_MODEL, T <: FixedEffectModel} = anova(FTest, m0, m1, ms...; kwargs...)
+function anova(
+                ::Type{FTest}, 
+                m0::M,
+                m::T,
+                ms::Vararg{T}; 
+                check::Bool = true
+            ) where {M <: LM_MODEL, T <: FixedEffectModel}
+    m = [m, ms...]
+    df = dof_aov.(m)
+    ord = sortperm(df)
+    df = (dof_aov(m0), df[ord]...)
+    models = (m0, m[ord]...)
+    # May exist some floating point error from dof_residual
+    dfr = round.(Int, dof_aovres.(models))
+    dev = deviance.(models)
+    check && @warn "Could not check whether models are nested: results may not be meaningful"
+    ftest_nested(MixedAovModels{Union{M, T}, length(models)}(models), df, dfr, dev, last(dev) / last(dfr))
+end
+function anova(::Type{FTest}, aovm::MixedAovModels{M}) where {M <: Union{LM_MODEL, FixedEffectModel}} 
+    dev = deviance.(aovm.model)
+    dfr = dof_aovres.(aovm.model)
+    ftest_nested(aovm, dof_aov.(aovm.model), dfr, dev, last(dev) / last(dfr))
+end
+
+function anova(::Type{LRT}, 
+                models::Vararg{M}; 
+                check::Bool = true) where {M <: FixedEffectModel}
+
+    df = dof_aov.(models)
+    ord = sortperm(collect(df))
+    df = df[ord]
+    models = models[ord]
+    dev = rss.(models)
+    # check comparable and nested
+    check && @warn "Could not check whether models are nested: results may not be meaningful"
+    lrt_nested(NestedModels(models), df, dev, last(dev) / dof_aovres(last(models)))
+end
+function anova(::Type{LRT}, aovm::NestedModels{M}) where {M <: FixedEffectModel}
+    df = dof_aov.(aovm.model)
+    dev = deviance.(aovm.model)
+    lrt_nested(aovm, df, dev, last(dev) / dof_aovres(last(aovm.model)))
+end
+
+function anova(
+                ::Type{LRT}, 
+                m0::M,
+                m::T,
+                ms::Vararg{T}; 
+                check::Bool = true
+            ) where {M <: LM_MODEL, T <: FixedEffectModel}
+    m = [m, ms...]
+    df = dof_aov.(m)
+    ord = sortperm(df)
+    df = (dof_aov(m0), df[ord]...)
+    models = (m0, m[ord]...)
+    dev = deviance.(models)
+    check && @warn "Could not check whether models are nested: results may not be meaningful"
+    lrt_nested(MixedAovModels{Union{M, T}, length(models)}(models), df, dev, last(dev) / dof_aovres(last(models)))
+end
+function anova(::Type{LRT}, aovm::MixedAovModels{M}) where {M <:  Union{LM_MODEL, FixedEffectModel}}
+    df = dof_aov.(aovm.model)
+    dev = deviance.(aovm.model)
+    lrt_nested(aovm, df, dev, last(dev) / dof_aovres(last(aovm.model)))
+end
+
 """
     lfe(formula::FormulaTerm, df, vcov::CovarianceEstimator = Vcov.simple(); kwargs...)
 
@@ -130,9 +197,9 @@ lfe(formula::FormulaTerm, df, vcov::CovarianceEstimator = Vcov.simple(); kwargs.
 
 ANOVA for fixed-effect linear regression.
 * `vcov`: estimator of covariance matrix.
-* `type`: type of anova (1 , 2 or 3). Default value is 1.
+* `type`: type of anova (1, 2 or 3). Default value is 1.
 
-`anova_lfe` generates a `FixedEffectModel`.
+`anova_lfe` generates a `FixedEffectModel` for `FTest`, and multiple models for `LRT`.
 """
 anova_lfe(f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple(); 
         test::Type{<: GoodnessOfFit} = FTest, 
@@ -142,11 +209,16 @@ anova_lfe(f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple();
 anova_lfe(test::Type{<: GoodnessOfFit}, f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple(); kwargs...) = 
     anova(test, FixedEffectModel, f, tbl, vcov; kwargs...)
 
-function anova(test::Type{<: GoodnessOfFit}, ::Type{FixedEffectModel}, f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple(); 
-        type::Int = 1, 
+function anova(test::Type{FTest}, ::Type{FixedEffectModel}, f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple(); 
+        type = 1,
         kwargs...)
     model = lfe(f, tbl, vcov; kwargs...)
     anova(test, model; type)
+end
+
+function anova(test::Type{LRT}, ::Type{FixedEffectModel}, f::FormulaTerm, tbl, vcov::CovarianceEstimator = Vcov.simple(); 
+        kwargs...)
+    anova(test, nestedmodels(FixedEffectModel, f, tbl, vcov; kwargs...))
 end
 
 
